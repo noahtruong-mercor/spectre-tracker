@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Spectre Sourcing Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 48px 56px 80px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #37352f;
+      letter-spacing: -0.3px;
+      margin-bottom: 5px;
+    }
+
+    .page-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #9b9a97;
+      font-size: 12px;
+    }
+
+    .meta-dot {
+      width: 6px; height: 6px;
+      background: #4db86b;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border: 1px solid #e3e2df;
+      border-radius: 6px;
+      background: #fff;
+      color: #6b6b6a;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .refresh-btn:hover { background: #f7f6f3; border-color: #d3d2cf; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    thead th {
+      padding: 5px 10px 7px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: #9b9a97;
+      border-bottom: 1px solid #e3e2df;
+      white-space: nowrap;
+    }
+    thead th.left { text-align: left; }
+
+    thead .group-row th {
+      padding: 10px 10px 2px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #c4c3c0;
+      border-bottom: none;
+    }
+    thead .group-row th.left { text-align: left; }
+
+    .col-divider { border-left: 1px solid #e3e2df !important; }
+
+    tbody tr {
+      border-bottom: 1px solid #f1f0ee;
+      transition: background 0.1s;
+    }
+    tbody tr:hover { background: #fafaf9; }
+    tbody tr.group-start td { border-top: 1px solid #e3e2df; }
+    tbody tr.group-start td.domain-lang { border-top: 1px solid #e3e2df; }
+
+    td { padding: 0; text-align: center; color: #37352f; vertical-align: middle; }
+    td.left { text-align: left; }
+    td.rate { color: #9b9a97; font-size: 12px; padding: 7px 10px; }
+
+    /* Domain cell: language label + country on same row, tightly packed */
+    td.domain-lang {
+      text-align: left;
+      padding: 8px 10px 8px 12px;
+      white-space: nowrap;
+    }
+    .lang-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #37352f;
+    }
+
+    td.domain-locale {
+      text-align: left;
+      padding: 8px 16px 8px 4px;
+      white-space: nowrap;
+    }
+    .locale-flag { font-size: 14px; margin-right: 4px; line-height: 1; vertical-align: middle; }
+    .locale-name { font-size: 12px; font-weight: 500; color: #6b6b6a; vertical-align: middle; }
+
+    .pill {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 500;
+      min-width: 28px;
+    }
+    .pill-swt { background: #fef3c7; color: #92400e; }
+    .pill-wt  { background: #d1fae5; color: #065f46; }
+    .pill-rth { background: #dbeafe; color: #1e40af; }
+
+    td.num { padding: 7px 10px; }
+
+    .gap-pos  { display: inline-block; padding: 1px 7px; border-radius: 3px; background: #fee2e2; color: #991b1b; font-weight: 600; font-size: 12px; }
+    .gap-neg  { display: inline-block; padding: 1px 7px; border-radius: 3px; background: #d1fae5; color: #065f46; font-weight: 600; font-size: 12px; }
+    .gap-zero { display: inline-block; padding: 1px 7px; border-radius: 3px; background: #d1fae5; color: #065f46; font-weight: 600; font-size: 12px; }
+
+    .cap-full { color: #16a34a; font-weight: 600; }
+    .cap-part { color: #d97706; font-weight: 600; }
+    .cap-zero { color: #dc2626; font-weight: 600; }
+
+    tfoot tr { border-top: 1px solid #e3e2df; background: #fafaf9; }
+    tfoot td { padding: 8px 10px; font-weight: 600; font-size: 12px; color: #37352f; }
+    tfoot td.left { color: #9b9a97; font-size: 11px; font-weight: 500; }
+
+    .footnote {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #c4c3c0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Project Spectre — Sourcing Tracker</div>
+      <div class="page-meta">
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-25 21:00 PT</span></span>
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="location.reload()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr class="group-row">
+          <th class="left" colspan="2"></th>
+          <th colspan="2">Rates</th>
+          <th class="col-divider" colspan="3">Pipeline</th>
+          <th class="col-divider" colspan="1">Goal</th>
+          <th class="col-divider" colspan="3">Offers</th>
+          <th class="col-divider" colspan="2">Fill</th>
+        </tr>
+        <tr>
+          <th class="left" style="padding-left:12px; min-width:110px">Language</th>
+          <th class="left" style="min-width:130px">Locale</th>
+          <th>Bill</th>
+          <th>Pay</th>
+          <th class="col-divider">Shortlist WT →</th>
+          <th>Work Trial →</th>
+          <th>RTH →</th>
+          <th class="col-divider">Next HCG</th>
+          <th class="col-divider">Pending</th>
+          <th>Accepted</th>
+          <th>Total</th>
+          <th class="col-divider">Gap</th>
+          <th>Cap %</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+      <tfoot>
+        <tr>
+          <td class="left" colspan="4" style="padding-left:12px">Totals</td>
+          <td id="tot-swt"></td>
+          <td id="tot-wt"></td>
+          <td id="tot-rth"></td>
+          <td id="tot-hcg"></td>
+          <td id="tot-pend"></td>
+          <td id="tot-acc"></td>
+          <td id="tot-total"></td>
+          <td id="tot-gap"></td>
+          <td id="tot-cap"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="footnote">Pipeline · Alabaster candidates table &nbsp;·&nbsp; Offers · Project Spectre jobs &nbsp;·&nbsp; Next HCG · upcoming milestone</div>
+
+</div>
+
+<script>
+  const FLAGS = {
+    "France": "🇫🇷", "Canada": "🇨🇦", "Belgium": "🇧🇪", "Switzerland": "🇨🇭",
+    "Germany": "🇩🇪", "Austria": "🇦🇹", "Italy": "🇮🇹", "Japan": "🇯🇵",
+    "Korea": "🇰🇷", "Brazil": "🇧🇷", "Portugal": "🇵🇹", "China": "🇨🇳",
+    "Taiwan": "🇹🇼", "Hong Kong": "🇭🇰", "Spain": "🇪🇸", "Mexico": "🇲🇽",
+    "United States": "🇺🇸", "Chile": "🇨🇱"
+  };
+
+  const rows = [
+    // French listing: list_AAABnFn39WB7DBCHe7RI1ICx
+    { domain: "Bilingual French Generalist Evaluator Expert", country: "France",        bill: 43.05, pay: 29.00, swt: 2,  wt: 0,  rth: 44, hcg: 5,  acc: 15, pend: 2,  groupStart: true  },
+    { domain: "Bilingual French Generalist Evaluator Expert", country: "Canada",        bill: 53.65, pay: 37.00, swt: 0,  wt: 9,  rth: 12, hcg: 2,  acc: 16, pend: 2  },
+    { domain: "Bilingual French Generalist Evaluator Expert", country: "Belgium",       bill: 43.05, pay: 29.00, swt: 0,  wt: 24, rth: 2,  hcg: 2,  acc: 2,  pend: 3  },
+    { domain: "Bilingual French Generalist Evaluator Expert", country: "Switzerland",   bill: 43.05, pay: 29.00, swt: 1,  wt: 11, rth: 0,  hcg: 2,  acc: 4,  pend: 1  },
+    // German listing: list_AAABnFnPnsdm9QrAH3hFkIt3
+    { domain: "Bilingual German Generalist Evaluator Expert", country: "Germany",       bill: 43.05, pay: 29.00, swt: 3,  wt: 2,  rth: 31, hcg: 5,  acc: 13, pend: 6,  groupStart: true  },
+    { domain: "Bilingual German Generalist Evaluator Expert", country: "Austria",       bill: 43.05, pay: 29.00, swt: 0,  wt: 31, rth: 6,  hcg: 2,  acc: 4,  pend: 0  },
+    { domain: "Bilingual German Generalist Evaluator Expert", country: "Switzerland",   bill: 43.05, pay: 29.00, swt: 0,  wt: 14, rth: 3,  hcg: 2,  acc: 1,  pend: 4  },
+    // Italian listing: list_AAABnFoAEoGQvv4Fy6RMIb-J
+    { domain: "Bilingual Italian Generalist Evaluator Expert", country: "Italy",        bill: 43.05, pay: 29.00, swt: 35, wt: 0,  rth: 64, hcg: 5,  acc: 9,  pend: 2,  groupStart: true  },
+    { domain: "Bilingual Italian Generalist Evaluator Expert", country: "Switzerland",  bill: 43.05, pay: 29.00, swt: 2,  wt: 17, rth: 0,  hcg: 2,  acc: 3,  pend: 0  },
+    // Japanese listing: list_AAABnFoMVAl-QMLOWSNC77AH (no tags)
+    { domain: "Bilingual Japanese Generalist Evaluator Expert", country: "Japan",       bill: 43.05, pay: 29.00, swt: 36, wt: 0,  rth: 66, hcg: 5,  acc: 9,  pend: 0,  groupStart: true  },
+    // Korean listing: list_AAABnFoVCMZivn_myVlIHqS8 (no tags)
+    { domain: "Bilingual Korean Generalist Evaluator Expert", country: "Korea",         bill: 43.05, pay: 29.00, swt: 29, wt: 0,  rth: 38, hcg: 5,  acc: 13, pend: 2,  groupStart: true  },
+    // Portuguese listing: list_AAABnFoF-D7KIiKNteFIlbgL
+    { domain: "Bilingual Portuguese Generalist Evaluator Expert", country: "Brazil",    bill: 21.60, pay: 14.00, swt: 26, wt: 4,  rth: 58, hcg: 5,  acc: 8,  pend: 2,  groupStart: true  },
+    { domain: "Bilingual Portuguese Generalist Evaluator Expert", country: "Portugal",  bill: 43.05, pay: 29.00, swt: 4,  wt: 29, rth: 23, hcg: 2,  acc: 4,  pend: 1  },
+    // Simplified Chinese listing: list_AAABnFoYnNHwPHA6a49ND7Vd (no tags)
+    { domain: "Bilingual Simplified Chinese Generalist Evaluator Expert", country: "China",       bill: 43.05, pay: 29.00, swt: 31, wt: 0,  rth: 58, hcg: 5,  acc: 11, pend: 4,  groupStart: true  },
+    // Traditional Chinese listing: list_AAABnFodqxMAUX3UiSBNIqtZ
+    { domain: "Bilingual Traditional Chinese Generalist Evaluator Expert", country: "Taiwan",     bill: 43.05, pay: 29.00, swt: 1,  wt: 0,  rth: 42, hcg: 5,  acc: 5,  pend: 4,  groupStart: true  },
+    { domain: "Bilingual Traditional Chinese Generalist Evaluator Expert", country: "Hong Kong",  bill: 43.05, pay: 29.00, swt: 2,  wt: 22, rth: 2,  hcg: 2,  acc: 6,  pend: 2  },
+    // Spanish listing: list_AAABnFnl_G7PQh21fANESqGt
+    { domain: "Bilingual Spanish Generalist Evaluator Expert", country: "Spain",         bill: 43.05, pay: 29.00, swt: 31, wt: 1,  rth: 45, hcg: 5,  acc: 9,  pend: 1,  groupStart: true  },
+    { domain: "Bilingual Spanish Generalist Evaluator Expert", country: "Mexico",        bill: 21.60, pay: 14.00, swt: 1,  wt: 37, rth: 19, hcg: 2,  acc: 7,  pend: 2  },
+    { domain: "Bilingual Spanish Generalist Evaluator Expert", country: "United States", bill: 53.65, pay: 37.00, swt: 5,  wt: 31, rth: 21, hcg: 2,  acc: 8,  pend: 0  },
+    { domain: "Bilingual Spanish Generalist Evaluator Expert", country: "Chile",         bill: 21.60, pay: 14.00, swt: 0,  wt: 70, rth: 4,  hcg: 2,  acc: 6,  pend: 4  },
+  ];
+
+  function gapClass(gap) {
+    if (gap > 0) return 'gap-pos';
+    if (gap < 0) return 'gap-neg';
+    return 'gap-zero';
+  }
+  function capClass(pct) {
+    if (pct >= 100) return 'cap-full';
+    if (pct === 0)  return 'cap-zero';
+    return 'cap-part';
+  }
+  function shortLang(d) {
+    const m = d.match(/Bilingual (\w+(?: \w+)*?) Generalist/);
+    return m ? m[1] : d;
+  }
+
+  const tbody = document.getElementById('table-body');
+  let tot = { swt:0, wt:0, rth:0, hcg:0, pend:0, acc:0, total:0 };
+
+  rows.forEach(r => {
+    const total  = r.pend + r.acc;
+    const gap    = r.hcg - r.acc;
+    const capPct = r.hcg > 0 ? Math.min(Math.round(r.acc / r.hcg * 100), 100) : 0;
+    const flag   = FLAGS[r.country] || '';
+    const lang   = shortLang(r.domain);
+
+    tot.swt   += r.swt;
+    tot.wt    += r.wt;
+    tot.rth   += r.rth;
+    tot.hcg   += r.hcg;
+    tot.pend  += r.pend;
+    tot.acc   += r.acc;
+    tot.total += total;
+
+    const tr = document.createElement('tr');
+    if (r.groupStart) tr.classList.add('group-start');
+    tr.innerHTML = `
+      <td class="domain-lang left${r.groupStart ? '' : ''}" >
+        ${r.groupStart ? `<span class="lang-label">${lang}</span>` : ''}
+      </td>
+      <td class="domain-locale left">
+        <span class="locale-flag">${flag}</span><span class="locale-name">${r.country}</span>
+      </td>
+      <td class="rate">$${r.bill.toFixed(2)}</td>
+      <td class="rate">$${r.pay.toFixed(2)}</td>
+      <td class="num"><span class="pill pill-swt">${r.swt}</span></td>
+      <td class="num"><span class="pill pill-wt">${r.wt}</span></td>
+      <td class="num"><span class="pill pill-rth">${r.rth}</span></td>
+      <td class="num" style="font-weight:500">${r.hcg}</td>
+      <td class="num">${r.pend}</td>
+      <td class="num">${r.acc}</td>
+      <td class="num" style="font-weight:500">${total}</td>
+      <td class="num"><span class="${gapClass(gap)}">${gap > 0 ? '+' : ''}${gap}</span></td>
+      <td class="num ${capClass(capPct)}">${capPct}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totGap = tot.hcg - tot.acc;
+  const totCap = tot.hcg > 0 ? Math.min(Math.round(tot.acc / tot.hcg * 100), 100) : 0;
+  document.getElementById('tot-swt').textContent   = tot.swt;
+  document.getElementById('tot-wt').textContent    = tot.wt;
+  document.getElementById('tot-rth').textContent   = tot.rth;
+  document.getElementById('tot-hcg').textContent   = tot.hcg;
+  document.getElementById('tot-pend').textContent  = tot.pend;
+  document.getElementById('tot-acc').textContent   = tot.acc;
+  document.getElementById('tot-total').textContent = tot.total;
+  document.getElementById('tot-gap').innerHTML     = `<span class="${gapClass(totGap)}">${totGap > 0 ? '+' : ''}${totGap}</span>`;
+  document.getElementById('tot-cap').innerHTML     = `<span class="${capClass(totCap)}">${totCap}%</span>`;
+</script>
+</body>
+</html>
