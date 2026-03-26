@@ -158,6 +158,50 @@
       font-size: 11px;
       color: #c4c3c0;
     }
+
+    .dri-progress {
+      margin-top: 32px;
+    }
+    .dri-progress-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: #9b9a97;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 14px;
+    }
+    .dri-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .dri-bar-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #37352f;
+      width: 72px;
+      flex-shrink: 0;
+    }
+    .dri-bar-track {
+      flex: 1;
+      height: 8px;
+      background: #f1f0ee;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .dri-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+    .dri-bar-pct {
+      font-size: 11px;
+      color: #9b9a97;
+      width: 52px;
+      text-align: right;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -177,7 +221,7 @@
     <div>
       <div class="page-title">Project Balboa 🦅 — Sourcing Tracker</div>
       <div class="page-meta">
-        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 11:15 PT</span></span>
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 11:30 PT</span></span>
       </div>
     </div>
     <button class="refresh-btn" onclick="location.reload()">
@@ -219,7 +263,7 @@
           <td></td>
           <td id="tot-rth"></td>
           <td id="tot-hcg"></td>
-          <td></td>
+          <td id="tot-next-hcg"></td>
           <td id="tot-pend"></td>
           <td id="tot-acc"></td>
           <td id="tot-total"></td>
@@ -231,6 +275,11 @@
   </div>
 
   <div class="footnote">Pipeline · Glowstone candidates table &nbsp;·&nbsp; Offers · Project Balboa jobs &nbsp;·&nbsp; Next HCG · upcoming milestone (Mar 28) &nbsp;·&nbsp; Gap = Next HCG − Accepted</div>
+
+  <div class="dri-progress">
+    <div class="dri-progress-title">Cap fill by DRI</div>
+    <div id="dri-bars"></div>
+  </div>
 
 </div>
 
@@ -288,15 +337,17 @@
     if (driSort !== 0) sorted.sort((a, b) => driSort * a.dri.localeCompare(b.dri));
 
     tbody.innerHTML = '';
-    const tot = { rth: 0, hcg: 0, pend: 0, acc: 0, total: 0, gap: 0 };
+    const tot = { rth: 0, hcg: 0, nextHcg: 0, pend: 0, acc: 0, total: 0, gap: 0, capSum: 0 };
 
     sorted.forEach(r => {
-      tot.rth   += r.rth;
-      tot.hcg   += r.curr_hcg;
-      tot.pend  += r.pend;
-      tot.acc   += r.acc;
-      tot.total += r.total;
-      tot.gap   += r.gap;
+      tot.rth    += r.rth;
+      tot.hcg    += r.curr_hcg;
+      tot.nextHcg+= r.next_hcg;
+      tot.pend   += r.pend;
+      tot.acc    += r.acc;
+      tot.total  += r.total;
+      tot.gap    += r.gap;
+      tot.capSum += r.capPct;
 
       const driKey = 'dri_' + r.domain;
       const driVal = localStorage.getItem(driKey) || '';
@@ -331,18 +382,44 @@
       });
     });
 
-    const totCapPct = tot.hcg > 0 ? Math.min(Math.round(tot.acc / tot.hcg * 100), 100) : '—';
-    document.getElementById('tot-rth').textContent   = tot.rth;
-    document.getElementById('tot-hcg').textContent   = tot.hcg;
-    document.getElementById('tot-pend').textContent  = tot.pend;
-    document.getElementById('tot-acc').textContent   = tot.acc;
-    document.getElementById('tot-total').textContent = tot.total;
-    document.getElementById('tot-gap').textContent   = tot.gap;
-    document.getElementById('tot-cap').textContent   = totCapPct + (typeof totCapPct === 'number' ? '%' : '');
+    const avgCapPct = sorted.length > 0 ? Math.round(tot.capSum / sorted.length) : '—';
+    document.getElementById('tot-rth').textContent      = tot.rth;
+    document.getElementById('tot-hcg').textContent      = tot.hcg;
+    document.getElementById('tot-next-hcg').textContent = tot.nextHcg;
+    document.getElementById('tot-pend').textContent     = tot.pend;
+    document.getElementById('tot-acc').textContent      = tot.acc;
+    document.getElementById('tot-total').textContent    = tot.total;
+    document.getElementById('tot-gap').textContent      = tot.gap;
+    document.getElementById('tot-cap').textContent      = avgCapPct + (typeof avgCapPct === 'number' ? '%' : '');
 
     const arrows = ['', '↑', '↓'];
     document.getElementById('gap-arrow').textContent = arrows[gapSort === 0 ? 0 : gapSort === 1 ? 1 : 2];
     document.getElementById('dri-arrow').textContent = arrows[driSort === 0 ? 0 : driSort === 1 ? 1 : 2];
+
+    // DRI progress bars
+    const driColors = { Sangeet: '#7eb3d8', Noah: '#a8c5a0', Josh: '#10b981', Adhi: '#f59e0b', Hrishi: '#b8896a' };
+    const driTotals = {};
+    sorted.forEach(r => {
+      if (!r.dri) return;
+      if (!driTotals[r.dri]) driTotals[r.dri] = { acc: 0, hcg: 0 };
+      driTotals[r.dri].acc += Math.min(r.acc, r.next_hcg);
+      driTotals[r.dri].hcg += r.next_hcg;
+    });
+    const barsEl = document.getElementById('dri-bars');
+    barsEl.innerHTML = '';
+    Object.entries(driTotals).sort((a, b) => a[0].localeCompare(b[0])).forEach(([name, d]) => {
+      const pct = d.hcg > 0 ? Math.min(Math.round(d.acc / d.hcg * 100), 100) : 0;
+      const color = driColors[name] || '#9b9a97';
+      const row = document.createElement('div');
+      row.className = 'dri-bar-row';
+      row.innerHTML = `
+        <div class="dri-bar-label">${name}</div>
+        <div class="dri-bar-track"><div class="dri-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="dri-bar-pct">${d.acc}/${d.hcg} · ${pct}%</div>
+      `;
+      barsEl.appendChild(row);
+    });
+    if (!Object.keys(driTotals).length) barsEl.innerHTML = '<div style="font-size:12px;color:#c4c3c0">Assign DRIs above to see breakdown.</div>';
   }
 
   function toggleGapSort() {
