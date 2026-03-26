@@ -45,9 +45,11 @@ WHERE c.LISTINGSTEPCONFIGID = 'ready-to-hire' AND c.ISMOSTRECENT = TRUE
 
 ### Offers Pending (pend)
 Jobs with STATUS = 'extended' in the project, grouped by role.
+ALWAYS filter ISLATEST = 1 on the JOBS table — without this, historical versioned records inflate counts 10x+.
 
 ### Offers Accepted (acc)
 Jobs with STATUS = 'active' in the project, grouped by role.
+ALWAYS filter ISLATEST = 1 on the JOBS table — same reason as above.
 
 ## Listings and their country tag mappings
 
