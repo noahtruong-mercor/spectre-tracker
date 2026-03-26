@@ -86,8 +86,9 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY pm.ROLEID ORDER BY pm.CREATEDAT DESC) = 
 
 ### Next milestone (next_hcg + next_date)
 The next upcoming milestone is the one with the smallest STARTTIMESTAMP that is still in the future.
+Use QUALIFY ROW_NUMBER() to pick the most recently created row per role (same as curr_hcg fix).
 SQL:
-SELECT pr.ROLETITLE, MIN(pm.METRICEXACTACTIVENEEDED) as next_hcg, MIN(pm.STARTTIMESTAMP) as next_start
+SELECT pr.ROLETITLE, pm.METRICEXACTACTIVENEEDED as next_hcg, pm.STARTTIMESTAMP as next_start
 FROM ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTMILESTONES pm
 JOIN ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTROLES pr ON pr.ROLEID = pm.ROLEID
 WHERE pm.PROJECTID = 'proj_AAABnFqxHX7B0l2O-IhLrZLh'
@@ -97,11 +98,10 @@ AND pm.STARTTIMESTAMP = (
     WHERE PROJECTID = 'proj_AAABnFqxHX7B0l2O-IhLrZLh'
     AND STARTTIMESTAMP > CURRENT_TIMESTAMP
 )
-GROUP BY pr.ROLETITLE
+QUALIFY ROW_NUMBER() OVER (PARTITION BY pm.ROLEID ORDER BY pm.CREATEDAT DESC) = 1
 
 The ROLETITLE format is "Bilingual X Generalist Evaluator Expert (Country)".
 Map each result to the matching tracker row by language + country.
-Use MIN to handle duplicate milestone rows for the same role and date.
 Format next_date as "Mon DD" (e.g. "Mar 30", "Apr 8") from the STARTTIMESTAMP.
 
 ## Output
