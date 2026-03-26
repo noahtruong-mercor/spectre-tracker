@@ -157,6 +157,15 @@
   </style>
 </head>
 <body>
+<script>
+  (function() {
+    const KEY = 'tracker_auth', PWD = 'mercor2026';
+    if (sessionStorage.getItem(KEY) === PWD) return;
+    const p = prompt('Enter team password:');
+    if (p === PWD) { sessionStorage.setItem(KEY, PWD); }
+    else { document.documentElement.innerHTML = '<body style="font-family:sans-serif;padding:40px;color:#666">Incorrect password.</body>'; }
+  })();
+</script>
 
 <div class="page">
 
