@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Balboa Sourcing Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 56px 80px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #37352f;
+      letter-spacing: -0.3px;
+      margin-bottom: 5px;
+    }
+
+    .page-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #9b9a97;
+      font-size: 12px;
+    }
+
+    .meta-dot {
+      width: 6px; height: 6px;
+      background: #4db86b;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border: 1px solid #e3e2df;
+      border-radius: 6px;
+      background: #fff;
+      color: #6b6b6a;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .refresh-btn:hover { background: #f7f6f3; border-color: #d3d2cf; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    thead th {
+      padding: 5px 10px 7px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: #9b9a97;
+      border-bottom: 1px solid #e3e2df;
+      white-space: nowrap;
+    }
+    thead th.left { text-align: left; }
+
+    thead .group-row th {
+      padding: 10px 10px 2px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #c4c3c0;
+      border-bottom: none;
+    }
+    thead .group-row th.left { text-align: left; }
+
+    .col-divider { border-left: 1px solid #e3e2df !important; }
+
+    tbody tr {
+      border-bottom: 1px solid #f1f0ee;
+      transition: background 0.1s;
+    }
+    tbody tr:hover { background: #fafaf9; }
+
+    td { padding: 0; text-align: center; color: #37352f; vertical-align: middle; }
+    td.left { text-align: left; }
+
+    td.domain-cell {
+      text-align: left;
+      padding: 9px 10px 9px 12px;
+    }
+    .domain-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #37352f;
+    }
+
+    td.num { padding: 7px 10px; font-size: 12px; color: #37352f; }
+    td.num-muted { padding: 7px 10px; font-size: 12px; color: #b8b7b4; }
+    .next-date { display: block; font-size: 10px; color: #b8b7b4; margin-top: 1px; font-weight: 400; }
+
+    .gap-pos  { color: #dc2626; font-weight: 600; font-size: 12px; }
+    .gap-neg  { color: #16a34a; font-weight: 600; font-size: 12px; }
+    .gap-zero { color: #16a34a; font-weight: 600; font-size: 12px; }
+
+    .cap-full { color: #16a34a; font-weight: 500; }
+    .cap-part { color: #d97706; font-weight: 500; }
+    .cap-zero { color: #dc2626; font-weight: 500; }
+
+    tfoot tr { border-top: 2px solid #e3e2df; background: #fafaf9; }
+    tfoot td { padding: 8px 10px; font-weight: 600; font-size: 12px; color: #37352f; }
+    tfoot td.left { color: #9b9a97; font-size: 11px; font-weight: 500; }
+
+    .footnote {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #c4c3c0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Project Balboa — Sourcing Tracker</div>
+      <div class="page-meta">
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-25 22:00 PT</span></span>
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="location.reload()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr class="group-row">
+          <th class="left"></th>
+          <th class="col-divider">Pipeline</th>
+          <th class="col-divider" colspan="2">Goal</th>
+          <th class="col-divider" colspan="3">Offers</th>
+          <th class="col-divider" colspan="2">Fill</th>
+        </tr>
+        <tr>
+          <th class="left" style="padding-left:12px; min-width:260px">Domain</th>
+          <th class="col-divider">RTH →</th>
+          <th class="col-divider">Current HCG</th>
+          <th>Next HCG</th>
+          <th class="col-divider">Pending</th>
+          <th>Accepted</th>
+          <th>Total</th>
+          <th class="col-divider">Gap</th>
+          <th>Cap %</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+      <tfoot>
+        <tr>
+          <td class="left" style="padding-left:12px">Totals</td>
+          <td id="tot-rth"></td>
+          <td id="tot-hcg"></td>
+          <td></td>
+          <td id="tot-pend"></td>
+          <td id="tot-acc"></td>
+          <td id="tot-total"></td>
+          <td id="tot-gap"></td>
+          <td id="tot-cap"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="footnote">Pipeline · Glowstone candidates table &nbsp;·&nbsp; Offers · Project Balboa jobs &nbsp;·&nbsp; Next HCG · upcoming milestone (Mar 28) &nbsp;·&nbsp; Gap = Next HCG − Accepted</div>
+
+</div>
+
+<script>
+  const rows = [
+    // P0 roles — next milestone Mar 28, next_hcg=15
+    { domain: "Buyers and Purchasing Agents",                  rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 186, acc: 43  },
+    { domain: "Accountants and Auditors",                      rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 187, acc: 47  },
+    { domain: "Real Estate Sales Agents",                      rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 166, acc: 40  },
+    { domain: "Audio and Video Technicians",                   rth: 17, curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 35,  acc: 8   },
+    { domain: "Film and Video Editors",                        rth: 12, curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 45,  acc: 8   },
+    { domain: "Property, Real Estate, and Community",          rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 134, acc: 27  },
+    { domain: "News Analysts, Reporters, and Journalists",     rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 141, acc: 39  },
+    { domain: "Producers and Directors",                       rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 186, acc: 50  },
+  ];
+
+  function gapClass(gap) {
+    if (gap > 0) return 'gap-pos';
+    if (gap < 0) return 'gap-neg';
+    return 'gap-zero';
+  }
+
+  function capClass(pct) {
+    if (pct >= 100) return 'cap-full';
+    if (pct > 0)    return 'cap-part';
+    return 'cap-zero';
+  }
+
+  function numCell(val, cls) {
+    if (val === 0) return `<td class="num-muted">${val}</td>`;
+    return `<td class="${cls || 'num'}">${val}</td>`;
+  }
+
+  const tbody = document.getElementById('table-body');
+  const tot = { rth: 0, hcg: 0, pend: 0, acc: 0, total: 0, gap: 0 };
+
+  rows.forEach(r => {
+    // gap based on next_hcg since curr_hcg = 0
+    const gap    = r.next_hcg - r.acc;
+    const capPct = r.next_hcg > 0 ? Math.min(Math.round(r.acc / r.next_hcg * 100), 100) : 0;
+    const total  = r.pend + r.acc;
+
+    tot.rth   += r.rth;
+    tot.hcg   += r.curr_hcg;
+    tot.pend  += r.pend;
+    tot.acc   += r.acc;
+    tot.total += total;
+    tot.gap   += gap;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="domain-cell"><span class="domain-name">${r.domain}</span></td>
+      ${r.rth === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.rth}</td>`}
+      <td class="num-muted col-divider">${r.curr_hcg}</td>
+      <td class="num" style="font-weight:500">${r.next_hcg}<span class="next-date">${r.next_date}</span></td>
+      ${r.pend === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.pend}</td>`}
+      ${r.acc === 0  ? `<td class="num-muted">0</td>`            : `<td class="num">${r.acc}</td>`}
+      <td class="num">${total}</td>
+      <td class="num col-divider"><span class="${gapClass(gap)}">${gap}</span></td>
+      <td class="num"><span class="${capClass(capPct)}">${capPct}%</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Totals footer
+  const totCapPct = tot.hcg > 0 ? Math.min(Math.round(tot.acc / tot.hcg * 100), 100) : '—';
+  document.getElementById('tot-rth').textContent   = tot.rth;
+  document.getElementById('tot-hcg').textContent   = tot.hcg;
+  document.getElementById('tot-pend').textContent  = tot.pend;
+  document.getElementById('tot-acc').textContent   = tot.acc;
+  document.getElementById('tot-total').textContent = tot.total;
+  document.getElementById('tot-gap').textContent   = tot.gap;
+  document.getElementById('tot-cap').textContent   = totCapPct + (typeof totCapPct === 'number' ? '%' : '');
+</script>
+
+</body>
+</html>
