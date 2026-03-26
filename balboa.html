@@ -151,7 +151,7 @@
     <div>
       <div class="page-title">Project Balboa — Sourcing Tracker</div>
       <div class="page-meta">
-        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-25 22:00 PT</span></span>
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 09:25 PT</span></span>
       </div>
     </div>
     <button class="refresh-btn" onclick="location.reload()">
@@ -207,15 +207,15 @@
 
 <script>
   const rows = [
-    // P0 roles — next milestone Mar 28, next_hcg=15
-    { domain: "Buyers and Purchasing Agents",                  rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 29, acc: 13 },
-    { domain: "Accountants and Auditors",                      rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 22, acc: 12 },
-    { domain: "Real Estate Sales Agents",                      rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 28, acc: 12 },
-    { domain: "Audio and Video Technicians",                   rth: 4,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 14, acc: 2  },
-    { domain: "Film and Video Editors",                        rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 11, acc: 3  },
-    { domain: "Property, Real Estate, and Community",          rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 18, acc: 7  },
-    { domain: "News Analysts, Reporters, and Journalists",     rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 17, acc: 11 },
-    { domain: "Producers and Directors",                       rth: 0,  curr_hcg: 0, next_hcg: 15, next_date: "Mar 28", pend: 19, acc: 14 },
+    // P0 roles — curr milestone active, next milestone Mar 28, next_hcg=15
+    { domain: "Buyers and Purchasing Agents",                  rth: 0,  curr_hcg: 15, next_hcg: 15, next_date: "Mar 28", pend: 26, acc: 16 },
+    { domain: "Accountants and Auditors",                      rth: 0,  curr_hcg: 15, next_hcg: 15, next_date: "Mar 28", pend: 17, acc: 16 },
+    { domain: "Real Estate Sales Agents",                      rth: 0,  curr_hcg: 14, next_hcg: 15, next_date: "Mar 28", pend: 28, acc: 12 },
+    { domain: "Audio and Video Technicians",                   rth: 4,  curr_hcg: 0,  next_hcg: 15, next_date: "Mar 28", pend: 10, acc: 6  },
+    { domain: "Film and Video Editors",                        rth: 0,  curr_hcg: 0,  next_hcg: 15, next_date: "Mar 28", pend: 8,  acc: 6  },
+    { domain: "Property, Real Estate, and Community",          rth: 0,  curr_hcg: 15, next_hcg: 15, next_date: "Mar 28", pend: 18, acc: 7  },
+    { domain: "News Analysts, Reporters, and Journalists",     rth: 0,  curr_hcg: 13, next_hcg: 15, next_date: "Mar 28", pend: 14, acc: 14 },
+    { domain: "Producers and Directors",                       rth: 0,  curr_hcg: 15, next_hcg: 15, next_date: "Mar 28", pend: 15, acc: 18 },
   ];
 
   function gapStyle(gap) {
