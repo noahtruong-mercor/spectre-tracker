@@ -85,24 +85,28 @@ AND (pm.DEADLINETIMESTAMP >= CURRENT_TIMESTAMP OR pm.DEADLINETIMESTAMP IS NULL)
 QUALIFY ROW_NUMBER() OVER (PARTITION BY pm.ROLEID ORDER BY pm.CREATEDAT DESC) = 1
 
 ### Next milestone (next_hcg + next_date)
-The next upcoming milestone is the one with the smallest STARTTIMESTAMP that is still in the future.
-Use QUALIFY ROW_NUMBER() to pick the most recently created row per role (same as curr_hcg fix).
+The next milestone is the one that starts at the DEADLINE of the current milestone (not just the nearest future STARTTIMESTAMP).
+This correctly skips over any intermediate milestone rows and lands on the true "next" period as shown in the Mercor UI.
 SQL:
+WITH curr AS (
+  SELECT pm.ROLEID, pm.DEADLINETIMESTAMP as curr_deadline
+  FROM ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTMILESTONES pm
+  WHERE pm.PROJECTID = 'proj_AAABnFqxHX7B0l2O-IhLrZLh'
+  AND pm.STARTTIMESTAMP <= CURRENT_TIMESTAMP
+  AND (pm.DEADLINETIMESTAMP >= CURRENT_TIMESTAMP OR pm.DEADLINETIMESTAMP IS NULL)
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY pm.ROLEID ORDER BY pm.CREATEDAT DESC) = 1
+)
 SELECT pr.ROLETITLE, pm.METRICEXACTACTIVENEEDED as next_hcg, pm.STARTTIMESTAMP as next_start
 FROM ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTMILESTONES pm
 JOIN ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTROLES pr ON pr.ROLEID = pm.ROLEID
+JOIN curr c ON c.ROLEID = pm.ROLEID
 WHERE pm.PROJECTID = 'proj_AAABnFqxHX7B0l2O-IhLrZLh'
-AND pm.STARTTIMESTAMP = (
-    SELECT MIN(STARTTIMESTAMP)
-    FROM ANALYTICS_DATABASE.AURORA_MERCOR_PRODUCTION.PROJECTMILESTONES
-    WHERE PROJECTID = 'proj_AAABnFqxHX7B0l2O-IhLrZLh'
-    AND STARTTIMESTAMP > CURRENT_TIMESTAMP
-)
+AND pm.STARTTIMESTAMP = c.curr_deadline
 QUALIFY ROW_NUMBER() OVER (PARTITION BY pm.ROLEID ORDER BY pm.CREATEDAT DESC) = 1
 
 The ROLETITLE format is "Bilingual X Generalist Evaluator Expert (Country)".
 Map each result to the matching tracker row by language + country.
-Format next_date as "Mon DD" (e.g. "Mar 30", "Apr 8") from the STARTTIMESTAMP.
+Format next_date as "Mon DD" (e.g. "Apr 1", "Apr 8") from the STARTTIMESTAMP.
 
 ## Output
 Edit /Users/noahtruong/spectre-tracker/index.html — update only:
