@@ -267,10 +267,18 @@
     { domain: "Bilingual Spanish Generalist Evaluator Expert", country: "Chile",         bill: 21.60, pay: 14.00, swt: 0,  wt: 70, rth: 4,  curr_hcg: 2,  next_hcg: 5,  next_date: "Apr 1", acc: 6,  pend: 4  },
   ];
 
+  function gapStyle(gap) {
+    if (gap <= 0) return '';
+    const t = Math.min(gap / 20, 1);
+    const hue = Math.round(45 - 45 * t);   // 45=yellow → 0=red
+    const sat = 95;
+    const lit = Math.round(52 - 6 * t);    // slightly darker toward red
+    return `color:hsl(${hue},${sat}%,${lit}%);font-weight:600;font-size:12px`;
+  }
   function gapClass(gap) {
-    if (gap > 0) return 'gap-pos';
     if (gap < 0) return 'gap-neg';
-    return 'gap-zero';
+    if (gap === 0) return 'gap-zero';
+    return '';
   }
   function capClass(pct) {
     if (pct >= 100) return 'cap-full';
@@ -319,7 +327,7 @@
       <td class="${r.pend === 0 ? 'num-muted' : 'num'}">${r.pend}</td>
       <td class="num">${r.acc}</td>
       <td class="num" style="font-weight:500">${total}</td>
-      <td class="num"><span class="${gapClass(gap)}">${gap}</span></td>
+      <td class="num"><span class="${gapClass(gap)}" style="${gapStyle(gap)}">${gap}</span></td>
       <td class="num ${capClass(capPct)}">${capPct}%</td>
     `;
     tbody.appendChild(tr);
