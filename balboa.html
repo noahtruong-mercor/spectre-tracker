@@ -75,8 +75,24 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 800px;
+      min-width: 900px;
     }
+
+    td.dri-cell { padding: 5px 10px; }
+    select.dri-select {
+      font-family: inherit;
+      font-size: 12px;
+      color: #37352f;
+      border: 1px solid #e3e2df;
+      border-radius: 5px;
+      padding: 3px 6px;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      width: 90px;
+    }
+    select.dri-select:hover { border-color: #c4c3c0; }
+    select.dri-select.assigned { background: #f7f6f3; font-weight: 500; }
 
     thead th {
       padding: 5px 10px 7px;
@@ -176,6 +192,7 @@
       <thead>
         <tr class="group-row">
           <th class="left"></th>
+          <th></th>
           <th class="col-divider">Pipeline</th>
           <th class="col-divider" colspan="2">Goal</th>
           <th class="col-divider" colspan="3">Offers</th>
@@ -183,6 +200,7 @@
         </tr>
         <tr>
           <th class="left" style="padding-left:12px; min-width:260px">Domain</th>
+          <th style="min-width:100px">DRI</th>
           <th class="col-divider">RTH →</th>
           <th class="col-divider">Current HCG</th>
           <th>Next HCG</th>
@@ -197,6 +215,7 @@
       <tfoot>
         <tr>
           <td class="left" style="padding-left:12px">Totals</td>
+          <td></td>
           <td id="tot-rth"></td>
           <td id="tot-hcg"></td>
           <td></td>
@@ -268,9 +287,22 @@
     tot.total += total;
     tot.gap   += gap;
 
+    const driKey = 'dri_' + r.domain;
+    const driVal = localStorage.getItem(driKey) || '';
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="domain-cell"><span class="domain-name">${r.domain}</span></td>
+      <td class="dri-cell">
+        <select class="dri-select${driVal ? ' assigned' : ''}" data-key="${driKey}">
+          <option value="">—</option>
+          <option value="Sangeet"${driVal==='Sangeet'?' selected':''}>Sangeet</option>
+          <option value="Noah"${driVal==='Noah'?' selected':''}>Noah</option>
+          <option value="Josh"${driVal==='Josh'?' selected':''}>Josh</option>
+          <option value="Adhi"${driVal==='Adhi'?' selected':''}>Adhi</option>
+          <option value="Hrishi"${driVal==='Hrishi'?' selected':''}>Hrishi</option>
+        </select>
+      </td>
       ${r.rth === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.rth}</td>`}
       <td class="num-muted col-divider">${r.curr_hcg}</td>
       <td class="num" style="font-weight:500">${r.next_hcg}<span class="next-date">${r.next_date}</span></td>
@@ -281,6 +313,10 @@
       <td class="num"><span class="${capClass(capPct)}">${capPct}%</span></td>
     `;
     tbody.appendChild(tr);
+    tr.querySelector('.dri-select').addEventListener('change', function() {
+      localStorage.setItem(this.dataset.key, this.value);
+      this.classList.toggle('assigned', !!this.value);
+    });
   });
 
   // Totals footer

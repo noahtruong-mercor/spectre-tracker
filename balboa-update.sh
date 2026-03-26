@@ -118,4 +118,10 @@ cd /Users/noahtruong/spectre-tracker
 /usr/bin/git add balboa.html
 /usr/bin/git commit -m "Auto-update Balboa $(TZ='America/Los_Angeles' date '+%Y-%m-%d %H:%M PT')"
 /usr/bin/git push origin main >> "$LOG" 2>&1
-echo "Deployed to GitHub Pages" >> "$LOG"
+echo "Pushed to GitHub" >> "$LOG"
+
+# Deploy to Vercel (balboa-tracker.vercel.app)
+cp /Users/noahtruong/spectre-tracker/balboa.html /Users/noahtruong/balboa-tracker/index.html
+cd /Users/noahtruong/balboa-tracker
+vercel deploy --prod --yes --scope mercorgrowth >> "$LOG" 2>&1
+echo "Deployed to Vercel" >> "$LOG"
