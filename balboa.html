@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Balboa Sourcing Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦅</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -176,7 +177,7 @@
     <div>
       <div class="page-title">Project Balboa 🦅 — Sourcing Tracker</div>
       <div class="page-meta">
-        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 11:00 PT</span></span>
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 11:15 PT</span></span>
       </div>
     </div>
     <button class="refresh-btn" onclick="location.reload()">
@@ -200,7 +201,7 @@
         </tr>
         <tr>
           <th class="left" style="padding-left:12px; min-width:260px">Domain</th>
-          <th style="min-width:100px">DRI</th>
+          <th style="min-width:100px;cursor:pointer;user-select:none" onclick="toggleDriSort()">DRI <span id="dri-arrow"></span></th>
           <th class="col-divider">RTH →</th>
           <th class="col-divider">Current HCG</th>
           <th>Next HCG</th>
@@ -272,7 +273,8 @@
   }
 
   const tbody = document.getElementById('table-body');
-  let gapSort = 0; // 0=none, 1=asc, -1=desc
+  let gapSort = 0; // 0=none, 1=desc, -1=asc
+  let driSort = 0; // 0=none, 1=asc, -1=desc
 
   function renderRows() {
     const sorted = rows.map(r => ({
@@ -280,8 +282,10 @@
       gap:    r.next_hcg - r.acc,
       capPct: r.next_hcg > 0 ? Math.min(Math.round(r.acc / r.next_hcg * 100), 100) : 0,
       total:  r.pend + r.acc,
+      dri:    localStorage.getItem('dri_' + r.domain) || '',
     }));
     if (gapSort !== 0) sorted.sort((a, b) => gapSort * (b.gap - a.gap));
+    if (driSort !== 0) sorted.sort((a, b) => driSort * a.dri.localeCompare(b.dri));
 
     tbody.innerHTML = '';
     const tot = { rth: 0, hcg: 0, pend: 0, acc: 0, total: 0, gap: 0 };
@@ -323,6 +327,7 @@
       tr.querySelector('.dri-select').addEventListener('change', function() {
         localStorage.setItem(this.dataset.key, this.value);
         this.classList.toggle('assigned', !!this.value);
+        if (driSort !== 0) renderRows();
       });
     });
 
@@ -337,10 +342,18 @@
 
     const arrows = ['', '↑', '↓'];
     document.getElementById('gap-arrow').textContent = arrows[gapSort === 0 ? 0 : gapSort === 1 ? 1 : 2];
+    document.getElementById('dri-arrow').textContent = arrows[driSort === 0 ? 0 : driSort === 1 ? 1 : 2];
   }
 
   function toggleGapSort() {
     gapSort = gapSort === 0 ? 1 : gapSort === 1 ? -1 : 0;
+    driSort = 0;
+    renderRows();
+  }
+
+  function toggleDriSort() {
+    driSort = driSort === 0 ? 1 : driSort === 1 ? -1 : 0;
+    gapSort = 0;
     renderRows();
   }
 
