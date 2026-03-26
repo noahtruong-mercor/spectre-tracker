@@ -176,7 +176,7 @@
     <div>
       <div class="page-title">Project Balboa 🦅 — Sourcing Tracker</div>
       <div class="page-meta">
-        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 10:15 PT</span></span>
+        <span><span class="meta-dot"></span>Last refreshed <span id="last-updated">2026-03-26 10:30 PT</span></span>
       </div>
     </div>
     <button class="refresh-btn" onclick="location.reload()">
@@ -207,7 +207,7 @@
           <th class="col-divider">Pending</th>
           <th>Accepted</th>
           <th>Total</th>
-          <th class="col-divider">Gap</th>
+          <th class="col-divider" id="gap-header" style="cursor:pointer;user-select:none" onclick="toggleGapSort()">Gap <span id="gap-arrow"></span></th>
           <th>Cap %</th>
         </tr>
       </thead>
@@ -272,62 +272,79 @@
   }
 
   const tbody = document.getElementById('table-body');
-  const tot = { rth: 0, hcg: 0, pend: 0, acc: 0, total: 0, gap: 0 };
+  let gapSort = 0; // 0=none, 1=asc, -1=desc
 
-  rows.forEach(r => {
-    // gap based on next_hcg since curr_hcg = 0
-    const gap    = r.next_hcg - r.acc;
-    const capPct = r.next_hcg > 0 ? Math.min(Math.round(r.acc / r.next_hcg * 100), 100) : 0;
-    const total  = r.pend + r.acc;
+  function renderRows() {
+    const sorted = rows.map(r => ({
+      ...r,
+      gap:    r.next_hcg - r.acc,
+      capPct: r.next_hcg > 0 ? Math.min(Math.round(r.acc / r.next_hcg * 100), 100) : 0,
+      total:  r.pend + r.acc,
+    }));
+    if (gapSort !== 0) sorted.sort((a, b) => gapSort * (b.gap - a.gap));
 
-    tot.rth   += r.rth;
-    tot.hcg   += r.curr_hcg;
-    tot.pend  += r.pend;
-    tot.acc   += r.acc;
-    tot.total += total;
-    tot.gap   += gap;
+    tbody.innerHTML = '';
+    const tot = { rth: 0, hcg: 0, pend: 0, acc: 0, total: 0, gap: 0 };
 
-    const driKey = 'dri_' + r.domain;
-    const driVal = localStorage.getItem(driKey) || '';
+    sorted.forEach(r => {
+      tot.rth   += r.rth;
+      tot.hcg   += r.curr_hcg;
+      tot.pend  += r.pend;
+      tot.acc   += r.acc;
+      tot.total += r.total;
+      tot.gap   += r.gap;
 
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="domain-cell"><span class="domain-name">${r.domain}</span></td>
-      <td class="dri-cell">
-        <select class="dri-select${driVal ? ' assigned' : ''}" data-key="${driKey}">
-          <option value="">—</option>
-          <option value="Sangeet"${driVal==='Sangeet'?' selected':''}>Sangeet</option>
-          <option value="Noah"${driVal==='Noah'?' selected':''}>Noah</option>
-          <option value="Josh"${driVal==='Josh'?' selected':''}>Josh</option>
-          <option value="Adhi"${driVal==='Adhi'?' selected':''}>Adhi</option>
-          <option value="Hrishi"${driVal==='Hrishi'?' selected':''}>Hrishi</option>
-        </select>
-      </td>
-      ${r.rth === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.rth}</td>`}
-      <td class="num-muted col-divider">${r.curr_hcg}</td>
-      <td class="num" style="font-weight:500">${r.next_hcg}<span class="next-date">${r.next_date}</span></td>
-      ${r.pend === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.pend}</td>`}
-      ${r.acc === 0  ? `<td class="num-muted">0</td>`            : `<td class="num">${r.acc}</td>`}
-      <td class="num">${total}</td>
-      <td class="num col-divider"><span class="${gapClass(gap)}" style="${gapStyle(gap)}">${gap}</span></td>
-      <td class="num"><span class="${capClass(capPct)}">${capPct}%</span></td>
-    `;
-    tbody.appendChild(tr);
-    tr.querySelector('.dri-select').addEventListener('change', function() {
-      localStorage.setItem(this.dataset.key, this.value);
-      this.classList.toggle('assigned', !!this.value);
+      const driKey = 'dri_' + r.domain;
+      const driVal = localStorage.getItem(driKey) || '';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="domain-cell"><span class="domain-name">${r.domain}</span></td>
+        <td class="dri-cell">
+          <select class="dri-select${driVal ? ' assigned' : ''}" data-key="${driKey}">
+            <option value="">—</option>
+            <option value="Sangeet"${driVal==='Sangeet'?' selected':''}>Sangeet</option>
+            <option value="Noah"${driVal==='Noah'?' selected':''}>Noah</option>
+            <option value="Josh"${driVal==='Josh'?' selected':''}>Josh</option>
+            <option value="Adhi"${driVal==='Adhi'?' selected':''}>Adhi</option>
+            <option value="Hrishi"${driVal==='Hrishi'?' selected':''}>Hrishi</option>
+          </select>
+        </td>
+        ${r.rth === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.rth}</td>`}
+        <td class="num-muted col-divider">${r.curr_hcg}</td>
+        <td class="num" style="font-weight:500">${r.next_hcg}<span class="next-date">${r.next_date}</span></td>
+        ${r.pend === 0 ? `<td class="num-muted col-divider">0</td>` : `<td class="num col-divider">${r.pend}</td>`}
+        ${r.acc === 0  ? `<td class="num-muted">0</td>`            : `<td class="num">${r.acc}</td>`}
+        <td class="num">${r.total}</td>
+        <td class="num col-divider"><span class="${gapClass(r.gap)}" style="${gapStyle(r.gap)}">${r.gap}</span></td>
+        <td class="num"><span class="${capClass(r.capPct)}">${r.capPct}%</span></td>
+      `;
+      tbody.appendChild(tr);
+      tr.querySelector('.dri-select').addEventListener('change', function() {
+        localStorage.setItem(this.dataset.key, this.value);
+        this.classList.toggle('assigned', !!this.value);
+      });
     });
-  });
 
-  // Totals footer
-  const totCapPct = tot.hcg > 0 ? Math.min(Math.round(tot.acc / tot.hcg * 100), 100) : '—';
-  document.getElementById('tot-rth').textContent   = tot.rth;
-  document.getElementById('tot-hcg').textContent   = tot.hcg;
-  document.getElementById('tot-pend').textContent  = tot.pend;
-  document.getElementById('tot-acc').textContent   = tot.acc;
-  document.getElementById('tot-total').textContent = tot.total;
-  document.getElementById('tot-gap').textContent   = tot.gap;
-  document.getElementById('tot-cap').textContent   = totCapPct + (typeof totCapPct === 'number' ? '%' : '');
+    const totCapPct = tot.hcg > 0 ? Math.min(Math.round(tot.acc / tot.hcg * 100), 100) : '—';
+    document.getElementById('tot-rth').textContent   = tot.rth;
+    document.getElementById('tot-hcg').textContent   = tot.hcg;
+    document.getElementById('tot-pend').textContent  = tot.pend;
+    document.getElementById('tot-acc').textContent   = tot.acc;
+    document.getElementById('tot-total').textContent = tot.total;
+    document.getElementById('tot-gap').textContent   = tot.gap;
+    document.getElementById('tot-cap').textContent   = totCapPct + (typeof totCapPct === 'number' ? '%' : '');
+
+    const arrows = ['', '↑', '↓'];
+    document.getElementById('gap-arrow').textContent = arrows[gapSort === 0 ? 0 : gapSort === 1 ? 1 : 2];
+  }
+
+  function toggleGapSort() {
+    gapSort = gapSort === 0 ? 1 : gapSort === 1 ? -1 : 0;
+    renderRows();
+  }
+
+  renderRows();
 </script>
 
 </body>
